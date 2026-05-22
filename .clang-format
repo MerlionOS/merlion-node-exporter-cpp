@@ -1,0 +1,28 @@
+# Pinned style for merlion-node-exporter-cpp. Mirrors merlion-tsdb-cpp.
+BasedOnStyle: LLVM
+Standard: c++20  # clang-format does not yet know c++23
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+NamespaceIndentation: None
+PointerAlignment: Left
+AlignAfterOpenBracket: BlockIndent
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBraces: Attach
+BreakConstructorInitializers: BeforeColon
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<.*\.h(pp)?>'
+    Priority: 1
+  - Regex: '^<.*>'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
+SortIncludes: CaseSensitive
+SpaceAfterTemplateKeyword: false
+SpacesBeforeTrailingComments: 2

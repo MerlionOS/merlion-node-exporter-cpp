@@ -1,0 +1,16 @@
+Merlion Node Exporter (C++)
+Copyright 2026 The MerlionOS Authors
+
+This product includes software derived from / inspired by the upstream
+Prometheus Node Exporter (https://github.com/prometheus/node_exporter),
+Copyright The Prometheus Authors, licensed under the Apache License,
+Version 2.0.
+
+Metric names, label conventions, and CLI flag names follow that of the
+upstream node_exporter so that existing Prometheus dashboards, alerting
+rules, and deployment tooling continue to work unchanged.
+
+This is the C++ sibling of merlion-node-exporter-rs
+(https://github.com/MerlionOS/merlion-node-exporter-rs); the two
+implementations are intentionally wire-compatible so operators can
+swap one for the other without touching their Prometheus configuration.
