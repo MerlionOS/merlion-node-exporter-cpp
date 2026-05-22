@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: build (${{ matrix.os }} / ${{ matrix.compiler }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            compiler: clang-18
+            cc: clang-18
+            cxx: clang++-18
+            extra_apt: clang-18 libc++-18-dev libc++abi-18-dev
+            cxxflags: "-stdlib=libc++"
+            ldflags: "-stdlib=libc++"
+          - os: ubuntu-24.04
+            compiler: gcc-14
+            cc: gcc-14
+            cxx: g++-14
+            extra_apt: gcc-14 g++-14
+            cxxflags: ""
+            ldflags: ""
+          - os: macos-14
+            compiler: brew-llvm
+            cc: brew-clang
+            cxx: brew-clang++
+            extra_apt: ""
+            cxxflags: ""
+            ldflags: ""
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux toolchain
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ${{ matrix.extra_apt }} cmake ninja-build
+          echo "CC=${{ matrix.cc }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx }}" >> "$GITHUB_ENV"
+
+      - name: Install macOS toolchain
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install llvm cmake ninja
+          LLVM_PREFIX="$(brew --prefix llvm)"
+          echo "CC=$LLVM_PREFIX/bin/clang"   >> "$GITHUB_ENV"
+          echo "CXX=$LLVM_PREFIX/bin/clang++" >> "$GITHUB_ENV"
+
+      - name: Configure
+        env:
+          CXXFLAGS: ${{ matrix.cxxflags }}
+          LDFLAGS:  ${{ matrix.ldflags }}
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DMNE_BUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Run smoke binary
+        run: ./build/merlion-node-exporter --version
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
+  clang-format:
+    name: clang-format
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format-18
+        # clang-format-18 supports c++20 mode used by our .clang-format
+      - name: Check formatting
+        run: |
+          files=$(git ls-files '*.cpp' '*.hpp' '*.hpp.in' || true)
+          if [ -n "$files" ]; then
+            clang-format-18 --dry-run --Werror $files
+          fi
